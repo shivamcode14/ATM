@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ATM Simulator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        
+        header {
+            background-color: #1a237e;
+            color: white;
+            text-align: center;
+            padding: 1rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            flex: 1;
+        }
+        
+        .atm-screen {
+            width: 100%;
+            min-height: 400px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .screen-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            height: 100%;
+        }
+        
+        .welcome-screen, .login-screen, .create-account-screen, .transaction-screen, 
+        .deposit-screen, .withdraw-screen, .balance-screen, .history-screen, .change-pin-screen {
+            width: 100%;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .welcome-screen {
+            display: flex;
+        }
+        
+        h2 {
+            color: #1a237e;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        
+        p {
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        
+        .btn-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            background-color: #1a237e;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-size: 1rem;
+        }
+        
+        .btn:hover {
+            background-color: #303f9f;
+        }
+        
+        .form-group {
+            width: 100%;
+            max-width: 300px;
+            margin-bottom: 1rem;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        
+        input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        
+        .transaction-history {
+            width: 100%;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 0.5rem;
+            margin-top: 1rem;
+        }
+        
+        .transaction-item {
+            padding: 0.5rem;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .transaction-item:last-child {
+            border-bottom: none;
+        }
+        
+        footer {
+            background-color: #1a237e;
+            color: white;
+            text-align: center;
+            padding: 1rem;
+            margin-top: auto;
+        }
+        
+        .error-msg {
+            color: #f44336;
+            margin-top: 0.5rem;
+        }
+        
+        .success-msg {
+            color: #4CAF50;
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>ATM Simulator</h1>
+        <p>Banking System Project</p>
+    </header>
+    
+    <div class="container">
+        <div class="atm-screen">
+            <div class="screen-content">
+                <!-- Welcome Screen -->
+                <div class="welcome-screen">
+                    <h2>Welcome to ATM Simulator</h2>
+                    <p>Please select an option to continue</p>
+                    <div class="btn-container">
+                        <button class="btn" onclick="showScreen('create-account-screen')">Create Account</button>
+                        <button class="btn" onclick="showScreen('login-screen')">Login</button>
+                        <button class="btn" onclick="exitATM()">Exit</button>
+                    </div>
+                </div>
+                
+                <!-- Login Screen -->
+                <div class="login-screen">
+                    <h2>Login to Your Account</h2>
+                    <div class="form-group">
+                        <label for="login-account-number">Account Number:</label>
+                        <input type="text" id="login-account-number" placeholder="Enter your account number">
+                    </div>
+                    <div class="form-group">
+                        <label for="login-pin">PIN:</label>
+                        <input type="password" id="login-pin" placeholder="Enter your PIN">
+                    </div>
+                    <div id="login-error" class="error-msg"></div>
+                    <div class="btn-container">
+                        <button class="btn" onclick="login()">Login</button>
+                        <button class="btn" onclick="showScreen('welcome-screen')">Back</button>
+                    </div>
+                </div>
+                
+                <!-- Create Account Screen -->
+                <div class="create-account-screen">
+                    <h2>Create New Account</h2>
+                    <div class="form-group">
+                        <label for="new-account-number">Account Number:</label>
+                        <input type="text" id="new-account-number" placeholder="Enter account number">
+                    </div>
+                    <div class="form-group">
+                        <label for="new-pin">PIN:</label>
+                        <input type="password" id="new-pin" placeholder="Create a 4-digit PIN">
+                    </div>
+                    <div class="form-group">
+                        <label for="initial-deposit">Initial Deposit (₹):</label>
+                        <input type="number" id="initial-deposit" placeholder="Enter amount">
+                    </div>
+                    <div id="create-account-error" class="error-msg"></div>
+                    <div id="create-account-success" class="success-msg"></div>
+                    <div class="btn-container">
+                        <button class="btn" onclick="createAccount()">Create Account</button>
+                        <button class="btn" onclick="showScreen('welcome-screen')">Back</button>
+                    </div>
+                </div>
+                
+                <!-- Transaction Screen -->
+                <div class="transaction-screen">
+                    <h2>Transaction Menu</h2>
+                    <p id="welcome-user"></p>
+                    <div class="btn-container">
+                        <button class="btn" onclick="showScreen('deposit-screen')">Deposit</button>
+                        <button class="btn" onclick="showScreen('withdraw-screen')">Withdraw</button>
+                        <button class="btn" onclick="checkBalance()">Check Balance</button>
+                        <button class="btn" onclick="viewTransactionHistory()">Transaction History</button>
+                        <button class="btn" onclick="showScreen('change-pin-screen')">Change PIN</button>
+                        <button class="btn" onclick="logout()">Logout</button>
+                    </div>
+                </div>
+                
+                <!-- Deposit Screen -->
+                <div class="deposit-screen">
+                    <h2>Deposit Money</h2>
+                    <div class="form-group">
+                        <label for="deposit-amount">Amount (₹):</label>
+                        <input type="number" id="deposit-amount" placeholder="Enter amount to deposit">
+                    </div>
+                    <div id="deposit-error" class="error-msg"></div>
+                    <div id="deposit-success" class="success-msg"></div>
+                    <div class="btn-container">
+                        <button class="btn" onclick="deposit()">Deposit</button>
+                        <button class="btn" onclick="showScreen('transaction-screen')">Back</button>
+                    </div>
+                </div>
+                
+                <!-- Withdraw Screen -->
+                <div class="withdraw-screen">
+                    <h2>Withdraw Money</h2>
+                    <div class="form-group">
+                        <label for="withdraw-amount">Amount (₹):</label>
+                        <input type="number" id="withdraw-amount" placeholder="Enter amount to withdraw">
+                    </div>
+                    <div id="withdraw-error" class="error-msg"></div>
+                    <div id="withdraw-success" class="success-msg"></div>
+                    <div class="btn-container">
+                        <button class="btn" onclick="withdraw()">Withdraw</button>
+                        <button class="btn" onclick="showScreen('transaction-screen')">Back</button>
+                    </div>
+                </div>
+                
+                <!-- Balance Screen -->
+                <div class="balance-screen">
+                    <h2>Account Balance</h2>
+                    <p>Your current balance is:</p>
+                    <h3 id="balance-amount" style="font-size: 2rem; color: #1a237e; margin: 1rem 0;">₹0.00</h3>
+                    <div class="btn-container">
+                        <button class="btn" onclick="showScreen('transaction-screen')">Back to Menu</button>
+                    </div>
+                </div>
+                
+                <!-- Transaction History Screen -->
+                <div class="history-screen">
+                    <h2>Transaction History</h2>
+                    <div class="transaction-history" id="transaction-history-list">
+                        <!-- Transaction history items will be added here dynamically -->
+                    </div>
+                    <div class="btn-container">
+                        <button class="btn" onclick="showScreen('transaction-screen')">Back to Menu</button>
+                    </div>
+                </div>
+                
+                <!-- Change PIN Screen -->
+                <div class="change-pin-screen">
+                    <h2>Change PIN</h2>
+                    <div class="form-group">
+                        <label for="current-pin">Current PIN:</label>
+                        <input type="password" id="current-pin" placeholder="Enter current PIN">
+                    </div>
+                    <div class="form-group">
+                        <label for="new-pin-change">New PIN:</label>
+                        <input type="password" id="new-pin-change" placeholder="Enter new PIN">
+                    </div>
+                    <div class="form-group">
+                        <label for="confirm-new-pin">Confirm New PIN:</label>
+                        <input type="password" id="confirm-new-pin" placeholder="Confirm new PIN">
+                    </div>
+                    <div id="change-pin-error" class="error-msg"></div>
+                    <div id="change-pin-success" class="success-msg"></div>
+                    <div class="btn-container">
+                        <button class="btn" onclick="changePin()">Change PIN</button>
+                        <button class="btn" onclick="showScreen('transaction-screen')">Back</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <p>Developed by: Nikhil Singh (24SCSE1010124), Mustehsan Nawaz (24SCSE1010978), Shivam Kumar (24SCSE1010013), Sanket Bhati (24SCSE1010035)</p>
+    </footer>
+    
+    <script>
+        // Simulated database for storing user accounts
+        let accounts = [];
+        let currentUser = null;
+        
+        // Helper function to show specific screen
+        function showScreen(screenId) {
+            // Hide all screens
+            document.querySelectorAll('.welcome-screen, .login-screen, .create-account-screen, .transaction-screen, .deposit-screen, .withdraw-screen, .balance-screen, .history-screen, .change-pin-screen').forEach(screen => {
+                screen.style.display = 'none';
+            });
+            
+            // Show selected screen
+            document.querySelector('.' + screenId).style.display = 'flex';
+            
+            // Clear error and success messages
+            document.querySelectorAll('.error-msg, .success-msg').forEach(msg => {
+                msg.textContent = '';
+            });
+            
+            // Clear input fields based on which screen is shown
+            if (screenId === 'welcome-screen') {
+                document.querySelectorAll('#login-account-number, #login-pin').forEach(input => {
+                    input.value = '';
+                });
+            }
+        }
+        
+        // Create account function
+        function createAccount() {
+            const accountNumber = document.getElementById('new-account-number').value;
+            const pin = document.getElementById('new-pin').value;
+            const initialDeposit = parseFloat(document.getElementById('initial-deposit').value);
+            const errorElement = document.getElementById('create-account-error');
+            const successElement = document.getElementById('create-account-success');
+            
+            // Validate inputs
+            if (!accountNumber || !pin || isNaN(initialDeposit)) {
+                errorElement.textContent = 'Please fill all fields with valid values.';
+                return;
+            }
+            
+            if (pin.length !== 4 || !/^\d+$/.test(pin)) {
+                errorElement.textContent = 'PIN must be a 4-digit number.';
+                return;
+            }
+            
+            if (initialDeposit < 500) {
+                errorElement.textContent = 'Initial deposit must be at least ₹500.';
+                return;
+            }
+            
+            // Check if account already exists
+            if (accounts.some(acc => acc.accountNumber === accountNumber)) {
+                errorElement.textContent = 'Account number already exists. Please choose a different one.';
+                return;
+            }
+            
+            // Create new account
+            const newAccount = {
+                accountNumber: accountNumber,
+                pin: pin,
+                balance: initialDeposit,
+                transactions: [{
+                    type: 'Deposit',
+                    amount: initialDeposit,
+                    date: new Date().toLocaleString()
+                }]
+            };
+            
+            accounts.push(newAccount);
+            
+            // Show success message
+            successElement.textContent = 'Account created successfully! You can now login.';
+            
+            // Clear form
+            document.getElementById('new-account-number').value = '';
+            document.getElementById('new-pin').value = '';
+            document.getElementById('initial-deposit').value = '';
+            
+            // Automatically redirect to login screen after 2 seconds
+            setTimeout(() => {
+                showScreen('login-screen');
+            }, 2000);
+        }
+        
+        // Login function
+        function login() {
+            const accountNumber = document.getElementById('login-account-number').value;
+            const pin = document.getElementById('login-pin').value;
+            const errorElement = document.getElementById('login-error');
+            
+            // Find the account
+            const account = accounts.find(acc => acc.accountNumber === accountNumber && acc.pin === pin);
+            
+            if (!account) {
+                errorElement.textContent = 'Invalid account number or PIN.';
+                return;
+            }
+            
+            // Set current user
+            currentUser = account;
+            
+            // Update welcome message
+            document.getElementById('welcome-user').textContent = `Welcome, Account: ${account.accountNumber}`;
+            
+            // Show transaction screen
+            showScreen('transaction-screen');
+        }
+        
+        // Deposit function
+        function deposit() {
+            const amount = parseFloat(document.getElementById('deposit-amount').value);
+            const errorElement = document.getElementById('deposit-error');
+            const successElement = document.getElementById('deposit-success');
+            
+            if (isNaN(amount) || amount <= 0) {
+                errorElement.textContent = 'Please enter a valid amount.';
+                return;
+            }
+            
+            // Update balance
+            currentUser.balance += amount;
+            
+            // Record transaction
+            currentUser.transactions.push({
+                type: 'Deposit',
+                amount: amount,
+                date: new Date().toLocaleString()
+            });
+            
+            // Show success message
+            successElement.textContent = `Successfully deposited ₹${amount.toFixed(2)}. New balance: ₹${currentUser.balance.toFixed(2)}`;
+            
+            // Clear input
+            document.getElementById('deposit-amount').value = '';
+        }
+        
+        // Withdraw function
+        function withdraw() {
+            const amount = parseFloat(document.getElementById('withdraw-amount').value);
+            const errorElement = document.getElementById('withdraw-error');
+            const successElement = document.getElementById('withdraw-success');
+            
+            if (isNaN(amount) || amount <= 0) {
+                errorElement.textContent = 'Please enter a valid amount.';
+                return;
+            }
+            
+            if (amount > currentUser.balance) {
+                errorElement.textContent = 'Insufficient funds.';
+                return;
+            }
+            
+            // Update balance
+            currentUser.balance -= amount;
+            
+            // Record transaction
+            currentUser.transactions.push({
+                type: 'Withdrawal',
+                amount: amount,
+                date: new Date().toLocaleString()
+            });
+            
+            // Show success message
+            successElement.textContent = `Successfully withdrew ₹${amount.toFixed(2)}. New balance: ₹${currentUser.balance.toFixed(2)}`;
+            
+            // Clear input
+            document.getElementById('withdraw-amount').value = '';
+        }
+        
+        // Check balance function
+        function checkBalance() {
+            document.getElementById('balance-amount').textContent = `₹${currentUser.balance.toFixed(2)}`;
+            showScreen('balance-screen');
+        }
+        
+        // View transaction history function
+        function viewTransactionHistory() {
+            const historyList = document.getElementById('transaction-history-list');
+            historyList.innerHTML = '';
+            
+            if (currentUser.transactions.length === 0) {
+                historyList.innerHTML = '<div class="transaction-item">No transactions found.</div>';
+                return;
+            }
+            
+            // Display transactions in reverse chronological order
+            for (let i = currentUser.transactions.length - 1; i >= 0; i--) {
+                const transaction = currentUser.transactions[i];
+                const transactionItem = document.createElement('div');
+                transactionItem.className = 'transaction-item';
+                transactionItem.textContent = `${transaction.date} - ${transaction.type}: ₹${transaction.amount.toFixed(2)}`;
+                historyList.appendChild(transactionItem);
+            }
+            
+            showScreen('history-screen');
+        }
+        
+        // Change PIN function
+        function changePin() {
+            const currentPin = document.getElementById('current-pin').value;
+            const newPin = document.getElementById('new-pin-change').value;
+            const confirmNewPin = document.getElementById('confirm-new-pin').value;
+            const errorElement = document.getElementById('change-pin-error');
+            const successElement = document.getElementById('change-pin-success');
+            
+            if (currentPin !== currentUser.pin) {
+                errorElement.textContent = 'Current PIN is incorrect.';
+                return;
+            }
+            
+            if (newPin.length !== 4 || !/^\d+$/.test(newPin)) {
+                errorElement.textContent = 'New PIN must be a 4-digit number.';
+                return;
+            }
+            
+            if (newPin !== confirmNewPin) {
+                errorElement.textContent = 'New PIN and confirmation do not match.';
+                return;
+            }
+            
+            // Update PIN
+            currentUser.pin = newPin;
+            
+            // Show success message
+            successElement.textContent = 'PIN changed successfully!';
+            
+            // Clear form
+            document.getElementById('current-pin').value = '';
+            document.getElementById('new-pin-change').value = '';
+            document.getElementById('confirm-new-pin').value = '';
+            
+            // Automatically redirect to transaction screen after 2 seconds
+            setTimeout(() => {
+                showScreen('transaction-screen');
+            }, 2000);
+        }
+        
+        // Logout function
+        function logout() {
+            currentUser = null;
+            showScreen('welcome-screen');
+        }
+        
+        // Exit ATM function
+        function exitATM() {
+            if (confirm('Are you sure you want to exit the ATM Simulator?')) {
+                alert('Thank you for using the ATM Simulator. Goodbye!');
+                showScreen('welcome-screen');
+            }
+        }
+    </script>
+</body>
+</html>
